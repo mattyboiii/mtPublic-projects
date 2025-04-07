@@ -1,4 +1,4 @@
-# Name of the library
+# Name of the program
 NAME = push_swap
 
 # Compiler and flags
@@ -7,59 +7,62 @@ CFLAGS = -g -Wall -Wextra -Werror
 LIBFT = -Llibft -lft
 
 # Directories
+LIBFT_DIR = libft
 SRC_DIR = src
 OBJ_DIR = obj
 
-# assignment statements-Source funcitons (string list creators is really
-# what these are)-------------- eg $(wildcard pattern)
-SRC = $(wildcard $(SRC_DIR)/*.c)
+# Create matching subdirectories for obj/
+SUB_DIRS = $(sort $(dir $(OBJ)))
 
-# Generate object file names from source files
+# Source files in src/ and its subdirectories
+SRC = $(wildcard $(SRC_DIR)/**/*.c) $(wildcard $(SRC_DIR)/*.c)
+
+# Object files in obj/, matching src structure
 OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(SRC))
 
-# Rules
+# Bonus source placeholders (currently unused)
+BONUS_SRC = bonus_src
+BONUS_OBJ = $(patsubst $(SRC_DIR)/%.c,$(OBJ_DIR)/%.o,$(BONUS_SRC))
+
+# Default rule
 all: $(NAME)
 
-# Create object directory
-$(OBJ_DIR):
-	@mkdir -p $(OBJ_DIR)
+# Build libft if needed
+$(LIBFT_DIR)/libft.a:
+	@$(MAKE) -C $(LIBFT_DIR)
 
-# Compile source files into object files
-$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(OBJ_DIR)
+# Create subdirectories in obj/
+$(SUB_DIRS):
+	@mkdir -p $@
+
+# Compile .c into .o, ensuring dirs exist
+$(OBJ_DIR)/%.o: $(SRC_DIR)/%.c | $(SUB_DIRS)
 	@$(CC) $(CFLAGS) -c $< -o $@
 
-# Link object files into executable
-$(NAME): $(OBJ)
-	$(CC) $(CFLAGS) $^ -o $@ $(LIBFT) $(LIBX)
-	@echo "\nCompilation complete!"
+# Link objects into push_swap executable
+$(NAME): $(LIBFT_DIR)/libft.a $(OBJ)
+	@$(CC) $(CFLAGS) $^ -o $@ $(LIBFT)
+	@echo "\n $(NAME) Compilation complete!\n"
+
+# Bonus rule (currently does nothing, but structure is kept)
+bonus: $(BONUS_OBJ)
+	@ar rcs $(NAME) $^
 
 # Clean rule: Remove object files and executable
 clean:
-	rm -rf $(OBJ_DIR) $(NAME)
-	@echo "Object files, obj directory, and executable removed!"
+	@rm -rf $(OBJ_DIR)
+	@echo "\n $(NAME) $(OBJ_DIR) cleaned!"
 
-fclean:clean
-	rm -rf $(NAME)
+fclean: clean
+	@rm -f $(NAME)
+	@echo " $(NAME) cleaned! fclean complete \n"
 
-re: clean all
-	@echo "Re-compiled project"
 
-.PHONY: all clean fclean re
 
-# SRC =	push_swap.c \
-# 		logicfunk.c \
-# 		logicfunk2.c \
-# 		logicfunk3.c \
-# 		logicfunk4.c \
-# 		logicfunk5.c \
-# 		lstfunk.c \
-# 		lstfunk2.c \
-# 		lstfunk3.c \
-# 		BasicSort.c \
-# 		error_check.c \
-# 		force_rotate.c \
-# 		force_rotate2.c \
-# 		manual_rotate.c \
-# 		sortfunk.c \
-# 		stackfunk.c \
-# 		stackfunk2.c
+dclean: fclean
+	@$(MAKE) -C $(LIBFT_DIR) fclean
+
+re: fclean all
+	@echo " Re-compiled project. \n"
+
+.PHONY: all clean fclean dclean re bonus rebonus
